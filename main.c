@@ -22,6 +22,7 @@ struct _blocks {
 int hp;
 int chp;
 int monster_hp;
+int cmhp;
 int max_monster_hp;
 
 struct _blocks blocks  = {'*', 'O'};
@@ -66,11 +67,12 @@ char* itoa(int value, char* str, int radix) {
 // base init
 void init_game(){
     // Do not change monster_hp!
-    monster_hp = 0;
+    monster_hp = 1;
+    cmhp = monster_hp;
     // But you can change hp and max_monster_hp
     hp = 10;
     chp = hp;
-    max_monster_hp = 3;
+    max_monster_hp = 4;
 
     setlocale(LC_ALL, "");
     initscr();
@@ -126,11 +128,15 @@ char *input(){
 }
 
 void attack_monster(int x, int y){
-    monster_hp -= 1;
-    if (monster_hp <= 0){
-        monster_hp = rand()%max_monster_hp;
+    if (cmhp <= 0){
+        while (cmhp == 0){
+        	monster_hp = rand()%max_monster_hp;
+        	cmhp = monster_hp;
+	}
         erase_title();
         mvaddstr(0, 10, "Killed");
+	signal(SIGALRM, erase_title);
+	alarm(2);
         int monster;
         for (int i=x-1; i<x+1; i++){
             for (int j=y-1; j<y+1; j++){
@@ -140,6 +146,8 @@ void attack_monster(int x, int y){
                 }
             }
         }
+    } else {
+        cmhp -= 1;
     }
 }
 
@@ -149,6 +157,7 @@ int monster_check(int x, int y){
     for (int i=x-1; i<x+1; i++){
         for (int j=y-1; j<y+1; j++){
             testch = mvinch(j, i);
+            mvaddch(5,5,testch);
             if (testch == '*'){
                 return 1;
             }
@@ -158,7 +167,7 @@ int monster_check(int x, int y){
 }
 
 
-int main(){
+int main(void){
     init_game();
     int y = 20;
     int x = 20;
@@ -197,8 +206,11 @@ int main(){
                 alarm(5);
             }
         }
-
+	if (monster_check(x, y) == 1){
+		mvprintw(0, 30, "M:%d/%d", cmhp, monster_hp);
+	}
         mvaddch(y, x, '@');
     }
     end_game();
+    return 0;
 }
