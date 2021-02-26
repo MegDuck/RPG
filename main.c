@@ -12,7 +12,7 @@
 
 //user headers
 #include "entity.h"
-
+#include "utils.h"
 
 struct _blocks {
     char entity;
@@ -101,15 +101,6 @@ void end_game(){
 }
 
 
-
-int can_go(int x, int y){
-    int testch;
-    /* return true if the space is okay to move into */
-
-    testch = mvinch(y, x);
-    return ((testch == ' '));
-}
-
 char *input(){
     int ch = getch();
     if (ch == KEY_LEFT){
@@ -128,15 +119,13 @@ char *input(){
 }
 
 void attack_monster(int x, int y){
-    if (cmhp <= 0){
-        while (cmhp == 0){
-        	monster_hp = rand()%max_monster_hp;
-        	cmhp = monster_hp;
-	}
+    if (cmhp <= 0 && cmhp == 0){
+        monster_hp = rand()%max_monster_hp;
+        cmhp = monster_hp;
         erase_title();
         mvaddstr(0, 10, "Killed");
-	signal(SIGALRM, erase_title);
-	alarm(2);
+	    signal(SIGALRM, erase_title);
+	    alarm(2);
         int monster;
         for (int i=x-1; i<x+1; i++){
             for (int j=y-1; j<y+1; j++){
@@ -146,7 +135,7 @@ void attack_monster(int x, int y){
                 }
             }
         }
-    } else {
+	}  else {
         cmhp -= 1;
     }
 }
@@ -154,10 +143,9 @@ void attack_monster(int x, int y){
 
 int monster_check(int x, int y){
     int testch;
-    for (int i=x-1; i<x+1; i++){
+    for (int i=x+1; i>x-1; i--){
         for (int j=y-1; j<y+1; j++){
             testch = mvinch(j, i);
-            mvaddch(5,5,testch);
             if (testch == '*'){
                 return 1;
             }
@@ -172,11 +160,12 @@ int main(void){
     int y = 20;
     int x = 20;
     mvaddstr(y, x, "@");
+    bool MONSTER_CHECK;
+    generate_ents(5);
     while(1){
         mvwprintw(stdscr, 0, 2, "%d/%d", chp, hp);
         char *action = input();
         mvaddch(y, x, ' ');
-        new_ent(10, 10);
         if (action == "left"){
             if ((x > 0) && can_go(y, x - 1)) {
                 x = x - 1;
@@ -207,8 +196,13 @@ int main(void){
             }
         }
 	if (monster_check(x, y) == 1){
+		MONSTER_CHECK=true;
 		mvprintw(0, 30, "M:%d/%d", cmhp, monster_hp);
 	}
+	    if (MONSTER_CHECK == true && monster_check(x, y) != 1){
+	        erase_title();
+	        MONSTER_CHECK = false;
+	    }
         mvaddch(y, x, '@');
     }
     end_game();

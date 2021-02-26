@@ -19,3 +19,6 @@ Arch-based: sudo pacman -S ncurses
 gcc entity.c entity.h main.c -lncurses -o game
 
 And you get an executable game!
+
+
+Tested on Android/PC(PeppermintOS)
